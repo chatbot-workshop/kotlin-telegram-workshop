@@ -249,10 +249,10 @@ To start the ability bot we need to do exactly the same as with the bot, we crea
 
 ```kotlin
 fun main(args: Array<String>) {
-    ApiContextInitializer.init()                                                         // 1
-    val api = TelegramBotsApi()                                                          // 2
-    val bot = WorkshopBot("1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ", "MyWorkshopBot", db)  // 3
-    api.registerBot(bot)                                                                 // 4
+    ApiContextInitializer.init()                                                     // 1
+    val api = TelegramBotsApi()                                                      // 2
+    val bot = WorkshopBot("1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ", "MyWorkshopBot")  // 3
+    api.registerBot(bot)                                                             // 4
 }
 ```
 
