@@ -1,0 +1,10 @@
+/.bot.db
+/.classpath
+/.gradle
+/.idea
+/.project
+/.settings
+/.vscode
+/bin
+/build
+/out

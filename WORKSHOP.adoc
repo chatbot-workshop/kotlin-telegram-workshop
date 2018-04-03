@@ -1,0 +1,830 @@
+= Kotlin & Telegram ChatBot Workshop
+
+Copyright (c) 2018 https://www.fihlon.ch/[Marcus Fihlon]
+
+== Prerequesites
+
+- Java 8
+- Java IDE
+- You should be familiar with your IDE
+- You need your own Telegram account
+- You need Telegram installed on your mobile or desktop
+
+WARNING: As of today, **Java 9+ is not supported** for this workshop. We use the https://github.com/rubenlagus/TelegramBots[Telegram Java API], which has a dependency to https://github.com/jankotek/mapdb[mapDB], which is not compatible to Java 9+ due to the use of undocumented internal SUN Java API.
+
+== Register
+
+Use Telegram to talk to the `BotFather` to register a new bot. Write down your bot username and your bot token.
+
+== Project setup
+
+For this workshop we use gradle. Please create a new gradle project using your IDE. I highly recommend to use the gradle application plugin to easily start you bot from the command line:
+
+```groovy
+group 'ch.fihlon.workshop.chatbot'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.31"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+mainClassName = 'ch.fihlon.workshop.chatbot.WorkshopBotKt'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: '1.2.31'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+```
+
+Of course, you may have to modify the `group` and `mainClassName` according your package structure and bot name. To run your bot (while you follow this workshop), just run the following command on your commandline:
+
+```bash
+./gradlew run
+```
+
+On Windows, you may have to replace `/` by `\`.
+
+== Getting started
+
+=== Dependencies
+
+To use the Telegram Bot API, please add the following dependency:
+
+```groovy
+compile group: 'org.telegram', name: 'telegrambots', version: '3.6'
+```
+
+=== Create a bot class
+
+Create a class `GettingStartedBot` that extends `TelegramLongPollingBot` and add empty methods to satisfy the class contract:
+
+```kotlin
+class GettingStartedBot : TelegramLongPollingBot() {
+
+    override fun getBotUsername(): String {
+    }
+
+    override fun getBotToken(): String {
+    }
+
+    override fun onUpdateReceived(update: Update) {
+    }
+}
+```
+
+=== Bot username
+
+The first method must return the username of your bot you wrote down while you registered your bot:
+
+```kotlin
+override fun getBotUsername(): String {
+    return "MyWorkshopBot"
+}
+```
+
+=== Bot token
+
+As you might imagine, the second method has to return the token of your bot. The token is needed for identification, like a password, so keep it private and *do not* commit it to any registry:
+
+```kotlin
+override fun getBotToken(): String {
+    return "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+```
+
+=== React on a message
+
+In the third method you write your code which will be executed when your bot receives a message. For our first example we will just send the same message back to the sender:
+
+```kotlin
+override fun onUpdateReceived(update: Update) {
+    if (update.hasMessage() && update.message.hasText()) {
+        val chatId = update.message.chatId
+        val text = update.message.text
+        val message = SendMessage()
+                .setChatId(chatId!!)
+                .setText(text)
+        try {
+            execute<Message, SendMessage>(message)
+        } catch (e: TelegramApiException) {
+            e.printStackTrace()
+        }
+    }
+}
+```
+
+This example should be quite easy to understand. First, we check if we have a message and it is a text message. Then we extract two values:
+
+. The `chatId`, which identifies a chat. We need this id, to send the answer to the correct person. Every chat has a unique id. We could save this id for later use and reply at any time. But here, we reply immediately.
+. The text. This is just the text of the message, the bot received.
+
+To send an answer, we have to create a `SendMessage` method and set the `chatId` and the text, which should be send. Then we `excute` this method, which will send the message. Of course, there can happen a lot of errors (servers down, network failures etc), so have to do really good error handling like in the example above.
+
+=== Start your bot
+
+For our simple example, we just a good old `main` method. The start needs four steps:
+
+. We need a Telegram API context
+. We need an instance of the Telegram API
+. We need an instance of our bot
+. We need to register our bot instance at Telegram
+
+```kotlin
+fun main(args: Array<String>) {
+    ApiContextInitializer.init()   // 1
+    val api = TelegramBotsApi()    // 2
+    val bot = GettingStartedBot()  // 3
+    api.registerBot(bot)           // 4
+}
+```
+=== Play with your bot
+
+Now, start your bot by running your `main` method.
+
+_Congratulations!_
+
+== Thinking in Abilities
+
+// TODO describe the ability feature of the Telegram Bot API
+
+=== Dependencies
+
+To use the Telegram Bot Ability API, please add the following dependency:
+
+```groovy
+compile group: 'org.telegram', name: 'telegrambots-abilities', version: '3.6'
+```
+
+=== Create a bot class
+
+Create a class `WorkshopBot` that extends `AbilityBot` and add a no argument constructor and empty methods to satisfy the class contract:
+
+```kotlin
+class WorkshopBot() : AbilityBot() {
+
+    override fun creatorId(): Int {
+        return 0
+    }
+}
+```
+
+=== Bot token and username
+
+The easy part: Add the token and username of your bot to the constructor and specify them in the super constructor call:
+
+```kotlin
+class WorkshopBot(botToken: String, botUsername: String) : AbilityBot(botToken, botUsername) {
+
+    override fun creatorId(): Int {
+        return 0
+    }
+
+  …
+}
+```
+
+=== Your Telegram ID
+
+AbilityBot forces a single implementation of creator ID. This ID corresponds to you, the bot developer. The bot needs to know its master since it has sensitive commands that only the master can use. So, if your Telegram ID Is 123456789, then add the following method:
+
+```kotlin
+override fun creatorId(): Int {
+    return 123456789
+}
+```
+
+If you do not know your Telegram ID, just start a chat to the `userinfobot`.
+
+=== Say hello
+
+Should be easy: Let's say hello. For creating an ability, we use the builder pattern:
+
+```kotlin
+@Suppress("unused")
+fun sayHelloWorld(): Ability {
+    return Ability
+        .builder()
+        .name("hello")                                                         // 1
+        .info("says hello world")                                              // 2
+        .locality(ALL)                                                         // 3
+        .privacy(PUBLIC)                                                       // 4
+        .action { context -> silent.send("Hello world", context.chatId()!!) }  // 5
+        .build()
+}
+```
+
+. the name of the command
+. a description of the command
+. the location of the command (`ALL`, `USER`, `GROUP`)
+. the privacy setting (`PUBLIC`, `GROUP_ADMIN`, `ADMIN`, `CREATOR`)
+. the action to be executed
+
+=== Start your bot
+
+To start the ability bot we need to do exactly the same as with the bot, we created before:
+
+. We need a Telegram API context
+. We need an instance of the Telegram API
+. We need an instance of our bot
+. We need to register our bot instance at Telegram
+
+```kotlin
+fun main(args: Array<String>) {
+    ApiContextInitializer.init()                                                         // 1
+    val api = TelegramBotsApi()                                                          // 2
+    val bot = WorkshopBot("1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ", "MyWorkshopBot", db)  // 3
+    api.registerBot(bot)                                                                 // 4
+}
+```
+
+=== Play with your bot
+
+Now, start your bot by running your `main` method and send the `/hello` command to your bot.
+
+_Congratulations!_
+
+Wait! Since you've implemented an ability bot, you get factory abilities as well. Try:
+
+* `/commands` – Prints all commands supported by the bot.
+        This will essentially print `hello - says hello world`. Yes! This is the information we supplied to the ability. The bot prints the commands in the format accepted by `BotFather`. So, whenever you change, add or remove commands, you can simply send `/commands` to your bot and forward that message to `BotFather`.
+* `/claim` – Claims this bot
+* `/backup` – returns a backup of the bot database
+* `/recover` – recovers the database
+* `/promote @username` – promotes user to bot admin
+* `/demote @username` – demotes bot admin to user
+* `/ban @username` – bans the user from accessing your bot commands and features
+* `/unban @username` – lifts the ban from the user
+
+== Replies
+
+A reply is AbilityBot's swiss army knife. It comes in two variants and is able to handle all possible use cases.
+
+=== Standalon Reply
+
+Standalone replies do not need abilities. Lets add one to our bot:
+
+```kotlin
+@Suppress("unused")
+fun replyToPhoto() : Reply {
+    return Reply.of(
+        Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)!!) },
+        Flag.PHOTO)
+}
+```
+
+As you can see, you just provide a lambda function which consumes the update. In addition to the required lambda function, replies can have optional predicates. In our example we let the bot know, that we only want to reply to images. Take a look at the `Flag` enum.
+
+Wow, that was easy! How easy would it be to implement a `JUGWorkshopBot`, where you can send pictures which are automatically uploaded to a Google Drive (or similar) share? If you are a nerd and finish this workshop early, try to implement it…
+
+=== Ability Reply and own Predicates
+
+In exactly the same manner, you are able to attach replies to abilities. This way you can localize replies that relate to the same ability.
+
+```kotlin
+@Suppress("unused")
+fun sayHi(): Ability {
+    return Ability
+            .builder()
+            .name("hi")
+            .info("says hi")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context ->
+                val firstName = context.user().firstName()
+                silent.send("Hi, $firstName", context.chatId()!!)
+            }
+            .reply(
+                Consumer<Update> { update -> silent.send("Wow, nice name!", update.message.chatId!!) },
+                Flag.TEXT,
+                Predicate<Update> { update -> update.message.text.startsWith("/hi") },
+                isMarcus
+            )
+            .build()
+}
+
+private val isMarcus: Predicate<Update>
+    get() = Predicate { update -> update.message.from.firstName.equals("Marcus", ignoreCase = true) }
+```
+
+In this example you can see how easy it is to create and use your own predicates. Using predicates, you can implement all checks, so your logic keeps clean and can focus on action.
+
+== Database Handling
+
+If you use the ability bot, you have an integrated database. To persist the data, a file with the name of your bot is created in the working directory (depending on your IDE, usually project root folder).
+
+=== Persistent Counter
+
+Let's use it to implement a simple counter:
+
+```kotlin
+@Suppress("unused")
+fun counter(): Ability {
+    return Ability.builder()
+            .name("count")
+            .info("increments a counter per user")
+            .privacy(PUBLIC)
+            .locality(ALL)
+            .action { context ->
+                val counterMap = db.getMap<String, Int>("COUNTERS")
+                val userId = context.user().id()
+                val counter = counterMap.compute(userId.toString(), {_, c -> if (c == null) 1 else c + 1})
+                val message = String.format("%s, your count is now %d!",
+                        context.user().shortName(), counter)
+                silent.send(message, context.chatId()!!)
+            }
+            .build()
+}
+```
+
+As you can see, the interface to the database is just a simple map. Cool, we can now implement actions that need persistence.
+
+=== Automatic Contacts
+
+The ability bot automatically stores basic user information of every user, who contacted your bot. So we have some kind of an automatically contact list. We can access this list very easy:
+
+```kotlin
+@Suppress("unused")
+fun contacts(): Ability {
+    return Ability.builder()
+            .name("contacts")
+            .info("lists all users who contacted this bot")
+            .privacy(PUBLIC)
+            .locality(ALL)
+            .action { context ->
+                val usersMap = db.getMap<String, EndUser>("USERS")
+                val users = usersMap.values.joinToString(", ") { it.username() }
+                val message = "The following users already contacted me: $users"
+                silent.send(message, context.chatId()!!)
+            }
+            .build()
+}
+```
+
+== Photos
+
+=== Receiving Photos
+
+The process of receiving a photo is not very intuitive. Maybe it will be improved in the future. Anyway, let's try to get the photo out of the message and store it to the filesystem.
+
+From Telegram we do not get the photo directly. Instead, we get a list of `PhotoSize` objects. A list? Yeas, the photo will be available in different sizes. If the sender sends a photo from his mobile device, it will be displayed in the chat history as a thumbnail. That's why one photo will end up in a list of `PhotoSize` objects. In our case, we want the original photo in the original size, so we sort that list by size and take the biggest one.
+
+```kotlin
+@Suppress("unused")
+fun savePhoto(): Reply {
+    return Reply.of(
+            Consumer<Update> { update ->
+                val photos = update.message.photo
+                val photoSize = photos.stream()
+                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                    .orElse(null)
+                if (photoSize != null) {
+                    // TODO download the photo
+                    silent.send("Yeah, I got it!", getChatId(update))
+                } else {
+                    silent.send("Houston, we have a problem!", getChatId(update))
+                }
+            },
+            Flag.PHOTO)
+}
+```
+
+So far, so good. But there is still no photo, just a `PhotoSize` object. We have to actively download the photo in that size, we want, to reduce network traffic and server load. But to download a photo, we first need to get the file path of the photo. Sometimes photos already have a file path, sometimes not – then we have to ask Telegram for it. This is how we do that:
+
+```kotlin
+private fun getFilePath(photo: PhotoSize): String? {
+    if (photo.hasFilePath()) {
+        return photo.filePath
+    }
+    val getFileMethod = GetFile()
+    getFileMethod.fileId = photo.fileId
+    try {
+        val file = execute(getFileMethod)
+        return file.filePath
+    } catch (e: TelegramApiException) {
+        e.printStackTrace()
+    }
+
+    return null
+}
+```
+
+Be careful to use the correct `File` object!
+
+Using the file path we are now able to download the photo from Telegram. Luckily, this task is very easy:
+
+```kotlin
+private fun downloadPhoto(filePath: String?): File? {
+    try {
+        return downloadFile(filePath)
+    } catch (e: TelegramApiException) {
+        e.printStackTrace()
+    }
+
+    return null
+}
+```
+
+With these two helper methods we can now finish our `savePhoto` method:
+
+```kotlin
+@Suppress("unused")
+fun savePhoto(): Reply {
+    return Reply.of(
+            Consumer<Update> { update ->
+                val photos = update.message.photo
+                val photoSize = photos.stream()
+                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                    .orElse(null)
+                if (photoSize != null) {
+                    val filePath = getFilePath(photoSize)
+                    val file = downloadPhoto(filePath)
+                    println("Temporary file: $file")
+                    silent.send("Yeah, I got it!", getChatId(update))
+                } else {
+                    silent.send("Houston, we have a problem!", getChatId(update))
+                }
+            },
+            Flag.PHOTO)
+}
+```
+
+Uff, done! Try it and send a photo to your bot! On the console you can see the temporary file on the bot host. Now you can easily continue and move it everywhere you like or implement some filter magic and send the photo back to the user.
+
+=== Sending Photos
+
+Compared to receiving a photo it is very easy to send a photo. There are three ways to do send a photo and all the three ways have the following four steps in common:
+
+. Create send method
+. Set destination chat id
+. Set the photo
+. Send the photo
+
+==== Send Photo from URL
+
+In this example we implement a `/logo` command which will, difficult to guess, send a logo:
+
+```kotlin
+@Suppress("unused")
+fun sendLogo(): Ability {
+    return Ability
+            .builder()
+            .name("logo")
+            .info("send the logo")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context -> sendPhotoFromUrl("https://www.fihlon.ch/images/logo.png", context.chatId()) }
+            .build()
+}
+
+private fun sendPhotoFromUrl(url: String, chatId: Long?) {
+    val sendPhotoRequest = SendPhoto()    // 1
+    sendPhotoRequest.setChatId(chatId)    // 2
+    sendPhotoRequest.photo = url          // 3
+    try {
+        sendPhoto(sendPhotoRequest)       // 4
+    } catch (e: TelegramApiException) {
+        e.printStackTrace()
+    }
+}
+```
+
+==== Send Photo from File ID
+
+This is especially useful, if your bot receives a photo and wants to forward ist. The file id is on the `PhotoSize` object and the bot does not need to download the photo before it forwards (sends) the photo another user.
+
+To test this, we extend our previously written `savePhoto` method that it sends the received photo back to the sender by using the file id of the photo. First, the implementation of the `sendPhotoFromFileId`:
+
+```kotlin
+private fun sendPhotoFromFileId(fileId: String, chatId: Long?) {
+    val sendPhotoRequest = SendPhoto()    // 1
+    sendPhotoRequest.setChatId(chatId)    // 2
+    sendPhotoRequest.photo = fileId       // 3
+    try {
+        sendPhoto(sendPhotoRequest)       // 4
+    } catch (e: TelegramApiException) {
+        e.printStackTrace()
+    }
+}
+```
+
+Here you can see the modified `savePhoto` method, we just added one line:
+
+```kotlin
+@Suppress("unused")
+fun savePhoto(): Reply {
+    return Reply.of(
+            Consumer<Update> { update ->
+                val photos = update.message.photo
+                val photoSize = photos.stream()
+                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                    .orElse(null)
+                if (photoSize != null) {
+                    val filePath = getFilePath(photoSize)
+                    val file = downloadPhoto(filePath)
+                    println("Temporary file: $file")
+                    silent.send("Yeah, I got it!", getChatId(update))
+                    sendPhotoFromFileId(photoSize.fileId, getChatId(update))  // here
+                } else {
+                    silent.send("Houston, we have a problem!", getChatId(update))
+                }
+            },
+            Flag.PHOTO)
+}
+```
+
+==== Upload and send a Photo
+
+This is so easy, you just need to specify a `File` object! The photo will be uploaded to Telegram and send to the user:
+
+```kotlin
+@Suppress("unused")
+fun sendIcon(): Ability {
+    return Ability
+            .builder()
+            .name("icon")
+            .info("send the icon")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context -> sendPhotoFromUpload("src/main/resources/chatbot.jpg", context.chatId()) }
+            .build()
+}
+
+private fun sendPhotoFromUpload(filePath: String, chatId: Long?) {
+    val sendPhotoRequest = SendPhoto()            // 1
+    sendPhotoRequest.setChatId(chatId)            // 2
+    sendPhotoRequest.setNewPhoto(File(filePath))  // 3
+    try {
+        sendPhoto(sendPhotoRequest)               // 4
+    } catch (e: TelegramApiException) {
+        e.printStackTrace()
+    }
+}
+```
+
+== Custom Keyboard (Buttons)
+
+To create a custom keyboard, we have to follow these four steps:
+
+. Create a `ReplyKeyboardMarkup` object
+. Create the keyboard as a list of keyboard rows
+. Add buttons to each row
+. Activate the keyboard
+
+In the following example we create a custom keyboard with two rows and three buttons on each row. If the user presses one of these buttons, the text will be send to the bot.
+
+In our example we want to provide buttons for the actions of our bot so we use the command as button text:
+
+```kotlin
+@Suppress("unused")
+fun sendKeyboard(): Ability {
+    return Ability
+            .builder()
+            .name("keyboard")
+            .info("send a custom keyboard")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context ->
+                val message = SendMessage()
+                message.setChatId(context.chatId())
+                message.text = "Enjoy this wonderful keyboard!"
+
+                val keyboardMarkup = ReplyKeyboardMarkup()
+                val keyboard = ArrayList<KeyboardRow>()
+
+                // row 1
+                var row = KeyboardRow()
+                row.add("/hello")
+                row.add("/hi")
+                row.add("/count")
+                keyboard.add(row)
+
+                // row 2
+                row = KeyboardRow()
+                row.add("/contacts")
+                row.add("/logo")
+                row.add("/icon")
+                keyboard.add(row)
+
+                // activate the keyboard
+                keyboardMarkup.keyboard = keyboard
+                message.replyMarkup = keyboardMarkup
+
+                silent.execute<Message, SendMessage>(message)
+            }
+            .build()
+}
+```
+
+== Formatted Messages
+
+To send formatted messages, you can use Markdown syntax. As of today, Telegram supports only a small subset of markdown. To activate Markdown support for a message, use `sendMd(…)` instead of just `send(…)`.
+
+```kotlin
+@Suppress("unused")
+fun format(): Ability {
+    return Ability
+            .builder()
+            .name("format")
+            .info("formats the message")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context ->
+                silent.sendMd("You can make text *bold* or _italic_.", context.chatId())
+                silent.sendMd("`This is code.`", context.chatId())
+                silent.sendMd("```\nThis\nis\nmulti\nline\ncode.\n```", context.chatId())
+            }
+            .build()
+}
+```
+
+== Arguments
+
+Commands can have arguments. Usually arguments are separated by whitespace. You can, of course, get the message and parse the arguments yourself. But with the ability bot you can easily access the arguments:
+
+```kotlin
+@Suppress("unused")
+fun add(): Ability {
+    return Ability
+            .builder()
+            .name("add")
+            .info("adds to numbers")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .input(2)
+            .action { context ->
+                val a = Integer.parseInt(context.firstArg())
+                val b = Integer.parseInt(context.secondArg())
+                val sum = a + b
+                silent.send(String.format("The sum of %d and %d is %d", a, b, sum), context.chatId())
+            }
+            .build()
+}
+```
+
+To automatically create error messages if the use has not specified the correct amount of arguments, you can configure the number of required arguments like in the example above: `.input(2)`
+
+== Default Abilities
+
+You can answer to non-command messages, too. That's what default abilities are for. Just specify an ability with the `DEFAULT` constant as command:
+
+```kotlin
+@Suppress("unused")
+fun sayNo(): Ability {
+    return Ability.builder()
+            .name(AbilityBot.DEFAULT)
+            .privacy(PUBLIC)
+            .locality(ALL)
+            .action { context -> silent.send("Sorry, I have no answer for you today.", context.chatId()) }
+            .build()
+}
+```
+
+== Testing
+
+=== Dependencies
+
+Better late than never – let's talk about testing. For testing our bot we need the help of a mocking library. Please add the following dependency to your project:
+
+```groovy
+testCompile group: 'org.mockito', name: 'mockito-core', version: '2.16.0'
+```
+
+=== Prepare your Bot
+
+In some of our abilities we use a database connection. We need to extend our constructor to be able to inject a database:
+
+```kotlin
+class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : AbilityBot(botToken, botUsername, db) {
+```
+
+Well, if we modify our constructor, we have to modify our `main` method, too. Here we create an online instance of our database and specify the file name:
+
+```kotlin
+fun main(args: Array<String>) {
+    ApiContextInitializer.init()
+    val db = MapDBContext.onlineInstance("bot.db")                                       // here
+    val api = TelegramBotsApi()
+    val bot = WorkshopBot("1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ", "MyWorkshopBot", db)  // and here
+    api.registerBot(bot)
+}
+```
+
+To prevent that the live system of Telegram is used, we need to inject mocks for the `MessageSender` and `SilentSender`. To be able to do this, we add the following two methods to our bot:
+
+```kotlin
+@VisibleForTesting
+fun setSender(sender: MessageSender) {
+    this.sender = sender
+}
+
+@VisibleForTesting
+fun setSilent(silent: SilentSender) {
+    this.silent = silent
+}
+```
+
+=== Prepare the Test
+
+. In some of our abilities we use a database connection. For the tests we create a separate database instance which will be deleted on JVM shutdown automatically.
+. We create an instance of our bot and inject our test database into it.
+. We need to mock the sender to prevent the use of the live Telegram API.
+. We inject the sender into our bot.
+. We create and inject the silent object into our bot.
+
+
+```kotlin
+class WorkshopBotTest {
+
+    companion object {
+        private const val BOT_TOKEN = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        private const val BOT_USERNAME = "MyWorkshopBot"
+    }
+
+    private var bot: WorkshopBot? = null
+    private var db: DBContext? = null
+    private var sender: MessageSender? = null
+
+    @Before
+    fun setUp() {
+        // Offline instance will get deleted at JVM shutdown
+        db = MapDBContext.offlineInstance("test")         // 1
+        bot = WorkshopBot(BOT_TOKEN, BOT_USERNAME, db!!)  // 2
+        sender = mock(MessageSender::class.java)          // 3
+        bot!!.setSender(sender!!)                         // 4
+        bot!!.setSilent(SilentSender(sender))             // 5
+    }
+
+    @After
+    fun tearDown() {
+        db!!.clear()
+    }
+}
+
+=== Simple Test
+
+First, we take a very simple test case: Our "Hello World" example. The test for this ability would be:
+
+```kotlin
+companion object {
+    …
+    private const val USER_ID = 1337
+    private const val CHAT_ID = 1337L
+}
+
+…
+
+@Test
+@Throws(TelegramApiException::class)
+fun sayHelloWorld() {
+    val mockedUpdate = mock(Update::class.java)
+    val endUser = EndUser.endUser(USER_ID, "Foo", "Bar", "foobar42")
+    val context = MessageContext.newContext(mockedUpdate, endUser, CHAT_ID)
+
+    bot!!.sayHelloWorld().action().accept(context)
+
+    val message = SendMessage()
+    message.setChatId(CHAT_ID)
+    message.text = "Hello world"
+    verify<MessageSender>(sender, times(1)).execute<Message, SendMessage>(message)
+}
+```
+
+In the first code block we mock the `Update` class, which is used by the context object. Then we create an `EndUser` for our test case and create a new context object with all needed information.
+
+The one line in the middle block executes our bot ability.
+
+The last block does the assertions. In this example we check, that the message was send exactly once to the correct chat. Therefore we need a message object with the text and chat id for the `verify` method of Mockito.
+
+== Additional Exercises
+
+. Instead of adding just text to the `KeyboardRow` object, try to use `KeyboardButton` objects.
+. Add a button to send the users phone number to the bot.
+. Add a button to send the current location of the user to the bot.
+. Reply to the phone number and location with a confirmation message.
+. In addition to using the `ReplyKeyboardMarkup`, take a look at `ReplyKeyboardHide`, `ForceReply` and `InlineKeyboardMarkup` and try to use them.
+. Extend the `/add` command to accept an unlimited number of numbers.
+. Write tests for all abilities of your bot.
+. Refactor your bot into smaller classes (create smaller bots which focus on one topic)
+. Tell the `BotFather` which commands are accepted by your bot.
+. Refactor your bot to always inject a database. Specify the name of the database file.
+. Refactor your bot to remove the hard coded username and token to avoid to accidentally commit them.
+. Provide feedback to me about this workshop.
