@@ -57,9 +57,7 @@ fun main(args: Array<String>) {
 
 class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : AbilityBot(botToken, botUsername, db) {
 
-    override fun creatorId(): Int {
-        return 123456789
-    }
+    override fun creatorId() = 123456789
 
     @Suppress("unused")
     fun sayHelloWorld(): Ability {
@@ -74,11 +72,9 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
     }
 
     @Suppress("unused")
-    fun replyToPhoto() : Reply {
-        return Reply.of(
+    fun replyToPhoto() = Reply.of(
             Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)) },
             Flag.PHOTO)
-    }
 
     private val isMarcus: Predicate<Update>
         get() = Predicate { update -> update.message.from.firstName.equals("Marcus", ignoreCase = true) }

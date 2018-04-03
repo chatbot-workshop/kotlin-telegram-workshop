@@ -80,11 +80,9 @@ Create a class `GettingStartedBot` that extends `TelegramLongPollingBot` and add
 ```kotlin
 class GettingStartedBot : TelegramLongPollingBot() {
 
-    override fun getBotUsername(): String {
-    }
+    override fun getBotUsername() = ""
 
-    override fun getBotToken(): String {
-    }
+    override fun getBotToken() = ""
 
     override fun onUpdateReceived(update: Update) {
     }
@@ -96,9 +94,7 @@ class GettingStartedBot : TelegramLongPollingBot() {
 The first method must return the username of your bot you wrote down while you registered your bot:
 
 ```kotlin
-override fun getBotUsername(): String {
-    return "MyWorkshopBot"
-}
+override fun getBotUsername() = "MyWorkshopBot"
 ```
 
 === Bot token
@@ -106,9 +102,7 @@ override fun getBotUsername(): String {
 As you might imagine, the second method has to return the token of your bot. The token is needed for identification, like a password, so keep it private and *do not* commit it to any registry:
 
 ```kotlin
-override fun getBotToken(): String {
-    return "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-}
+override fun getBotToken() = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ```
 
 === React on a message
@@ -180,10 +174,7 @@ Create a class `WorkshopBot` that extends `AbilityBot` and add a no argument con
 
 ```kotlin
 class WorkshopBot() : AbilityBot() {
-
-    override fun creatorId(): Int {
-        return 0
-    }
+    override fun creatorId() = 0
 }
 ```
 
@@ -193,11 +184,7 @@ The easy part: Add the token and username of your bot to the constructor and spe
 
 ```kotlin
 class WorkshopBot(botToken: String, botUsername: String) : AbilityBot(botToken, botUsername) {
-
-    override fun creatorId(): Int {
-        return 0
-    }
-
+    override fun creatorId() = 0
   …
 }
 ```
@@ -207,9 +194,7 @@ class WorkshopBot(botToken: String, botUsername: String) : AbilityBot(botToken, 
 AbilityBot forces a single implementation of creator ID. This ID corresponds to you, the bot developer. The bot needs to know its master since it has sensitive commands that only the master can use. So, if your Telegram ID Is 123456789, then add the following method:
 
 ```kotlin
-override fun creatorId(): Int {
-    return 123456789
-}
+override fun creatorId() = 123456789
 ```
 
 If you do not know your Telegram ID, just start a chat to the `userinfobot`.
@@ -284,11 +269,9 @@ Standalone replies do not need abilities. Lets add one to our bot:
 
 ```kotlin
 @Suppress("unused")
-fun replyToPhoto() : Reply {
-    return Reply.of(
+fun replyToPhoto() = Reply.of(
         Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)!!) },
         Flag.PHOTO)
-}
 ```
 
 As you can see, you just provide a lambda function which consumes the update. In addition to the required lambda function, replies can have optional predicates. In our example we let the bot know, that we only want to reply to images. Take a look at the `Flag` enum.

@@ -35,13 +35,9 @@ fun main(args: Array<String>) {
 
 class GettingStartedBot : TelegramLongPollingBot() {
 
-    override fun getBotUsername(): String {
-        return "MyWorkshopBot"
-    }
+    override fun getBotUsername() = "MyWorkshopBot"
 
-    override fun getBotToken(): String {
-        return "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    }
+    override fun getBotToken() = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     override fun onUpdateReceived(update: Update) {
         if (update.hasMessage() && update.message.hasText()) {
