@@ -115,8 +115,8 @@ override fun onUpdateReceived(update: Update) {
         val chatId = update.message.chatId
         val text = update.message.text
         val message = SendMessage()
-                .setChatId(chatId!!)
-                .setText(text)
+            .setChatId(chatId!!)
+            .setText(text)
         try {
             execute<Message, SendMessage>(message)
         } catch (e: TelegramApiException) {
@@ -270,8 +270,8 @@ Standalone replies do not need abilities. Lets add one to our bot:
 ```kotlin
 @Suppress("unused")
 fun replyToPhoto() = Reply.of(
-        Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)!!) },
-        Flag.PHOTO)
+    Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)!!) },
+    Flag.PHOTO)
 ```
 
 As you can see, you just provide a lambda function which consumes the update. In addition to the required lambda function, replies can have optional predicates. In our example we let the bot know, that we only want to reply to images. Take a look at the `Flag` enum.
@@ -286,22 +286,22 @@ In exactly the same manner, you are able to attach replies to abilities. This wa
 @Suppress("unused")
 fun sayHi(): Ability {
     return Ability
-            .builder()
-            .name("hi")
-            .info("says hi")
-            .locality(ALL)
-            .privacy(PUBLIC)
-            .action { context ->
-                val firstName = context.user().firstName()
-                silent.send("Hi, $firstName", context.chatId()!!)
-            }
-            .reply(
-                Consumer<Update> { update -> silent.send("Wow, nice name!", update.message.chatId!!) },
-                Flag.TEXT,
-                Predicate<Update> { update -> update.message.text.startsWith("/hi") },
-                isMarcus
-            )
-            .build()
+        .builder()
+        .name("hi")
+        .info("says hi")
+        .locality(ALL)
+        .privacy(PUBLIC)
+        .action { context ->
+            val firstName = context.user().firstName()
+            silent.send("Hi, $firstName", context.chatId()!!)
+        }
+        .reply(
+            Consumer<Update> { update -> silent.send("Wow, nice name!", update.message.chatId!!) },
+            Flag.TEXT,
+            Predicate<Update> { update -> update.message.text.startsWith("/hi") },
+            isMarcus
+        )
+        .build()
 }
 
 private val isMarcus: Predicate<Update>
@@ -322,19 +322,19 @@ Let's use it to implement a simple counter:
 @Suppress("unused")
 fun counter(): Ability {
     return Ability.builder()
-            .name("count")
-            .info("increments a counter per user")
-            .privacy(PUBLIC)
-            .locality(ALL)
-            .action { context ->
-                val counterMap = db.getMap<String, Int>("COUNTERS")
-                val userId = context.user().id()
-                val counter = counterMap.compute(userId.toString(), {_, c -> if (c == null) 1 else c + 1})
-                val message = String.format("%s, your count is now %d!",
-                        context.user().shortName(), counter)
-                silent.send(message, context.chatId()!!)
-            }
-            .build()
+        .name("count")
+        .info("increments a counter per user")
+        .privacy(PUBLIC)
+        .locality(ALL)
+        .action { context ->
+            val counterMap = db.getMap<String, Int>("COUNTERS")
+            val userId = context.user().id()
+            val counter = counterMap.compute(userId.toString(), {_, c -> if (c == null) 1 else c + 1})
+            val message = String.format("%s, your count is now %d!",
+                    context.user().shortName(), counter)
+            silent.send(message, context.chatId()!!)
+        }
+        .build()
 }
 ```
 
@@ -348,17 +348,17 @@ The ability bot automatically stores basic user information of every user, who c
 @Suppress("unused")
 fun contacts(): Ability {
     return Ability.builder()
-            .name("contacts")
-            .info("lists all users who contacted this bot")
-            .privacy(PUBLIC)
-            .locality(ALL)
-            .action { context ->
-                val usersMap = db.getMap<String, EndUser>("USERS")
-                val users = usersMap.values.joinToString(", ") { it.username() }
-                val message = "The following users already contacted me: $users"
-                silent.send(message, context.chatId()!!)
-            }
-            .build()
+        .name("contacts")
+        .info("lists all users who contacted this bot")
+        .privacy(PUBLIC)
+        .locality(ALL)
+        .action { context ->
+            val usersMap = db.getMap<String, EndUser>("USERS")
+            val users = usersMap.values.joinToString(", ") { it.username() }
+            val message = "The following users already contacted me: $users"
+            silent.send(message, context.chatId()!!)
+        }
+        .build()
 }
 ```
 
@@ -374,19 +374,19 @@ From Telegram we do not get the photo directly. Instead, we get a list of `Photo
 @Suppress("unused")
 fun savePhoto(): Reply {
     return Reply.of(
-            Consumer<Update> { update ->
-                val photos = update.message.photo
-                val photoSize = photos.stream()
-                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
-                    .orElse(null)
-                if (photoSize != null) {
-                    // TODO download the photo
-                    silent.send("Yeah, I got it!", getChatId(update))
-                } else {
-                    silent.send("Houston, we have a problem!", getChatId(update))
-                }
-            },
-            Flag.PHOTO)
+        Consumer<Update> { update ->
+            val photos = update.message.photo
+            val photoSize = photos.stream()
+                .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                .orElse(null)
+            if (photoSize != null) {
+                // TODO download the photo
+                silent.send("Yeah, I got it!", getChatId(update))
+            } else {
+                silent.send("Houston, we have a problem!", getChatId(update))
+            }
+        },
+        Flag.PHOTO)
 }
 ```
 
@@ -432,21 +432,21 @@ With these two helper methods we can now finish our `savePhoto` method:
 @Suppress("unused")
 fun savePhoto(): Reply {
     return Reply.of(
-            Consumer<Update> { update ->
-                val photos = update.message.photo
-                val photoSize = photos.stream()
-                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
-                    .orElse(null)
-                if (photoSize != null) {
-                    val filePath = getFilePath(photoSize)
-                    val file = downloadPhoto(filePath)
-                    println("Temporary file: $file")
-                    silent.send("Yeah, I got it!", getChatId(update))
-                } else {
-                    silent.send("Houston, we have a problem!", getChatId(update))
-                }
-            },
-            Flag.PHOTO)
+        Consumer<Update> { update ->
+            val photos = update.message.photo
+            val photoSize = photos.stream()
+                .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                .orElse(null)
+            if (photoSize != null) {
+                val filePath = getFilePath(photoSize)
+                val file = downloadPhoto(filePath)
+                println("Temporary file: $file")
+                silent.send("Yeah, I got it!", getChatId(update))
+            } else {
+                silent.send("Houston, we have a problem!", getChatId(update))
+            }
+        },
+        Flag.PHOTO)
 }
 ```
 
@@ -469,13 +469,13 @@ In this example we implement a `/logo` command which will, difficult to guess, s
 @Suppress("unused")
 fun sendLogo(): Ability {
     return Ability
-            .builder()
-            .name("logo")
-            .info("send the logo")
-            .locality(ALL)
-            .privacy(PUBLIC)
-            .action { context -> sendPhotoFromUrl("https://www.fihlon.ch/images/logo.png", context.chatId()) }
-            .build()
+        .builder()
+        .name("logo")
+        .info("send the logo")
+        .locality(ALL)
+        .privacy(PUBLIC)
+        .action { context -> sendPhotoFromUrl("https://www.fihlon.ch/images/logo.png", context.chatId()) }
+        .build()
 }
 
 private fun sendPhotoFromUrl(url: String, chatId: Long?) {
@@ -515,22 +515,22 @@ Here you can see the modified `savePhoto` method, we just added one line:
 @Suppress("unused")
 fun savePhoto(): Reply {
     return Reply.of(
-            Consumer<Update> { update ->
-                val photos = update.message.photo
-                val photoSize = photos.stream()
-                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
-                    .orElse(null)
-                if (photoSize != null) {
-                    val filePath = getFilePath(photoSize)
-                    val file = downloadPhoto(filePath)
-                    println("Temporary file: $file")
-                    silent.send("Yeah, I got it!", getChatId(update))
-                    sendPhotoFromFileId(photoSize.fileId, getChatId(update))  // here
-                } else {
-                    silent.send("Houston, we have a problem!", getChatId(update))
-                }
-            },
-            Flag.PHOTO)
+        Consumer<Update> { update ->
+            val photos = update.message.photo
+            val photoSize = photos.stream()
+                .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                .orElse(null)
+            if (photoSize != null) {
+                val filePath = getFilePath(photoSize)
+                val file = downloadPhoto(filePath)
+                println("Temporary file: $file")
+                silent.send("Yeah, I got it!", getChatId(update))
+                sendPhotoFromFileId(photoSize.fileId, getChatId(update))  // here
+            } else {
+                silent.send("Houston, we have a problem!", getChatId(update))
+            }
+        },
+        Flag.PHOTO)
 }
 ```
 
@@ -542,13 +542,13 @@ This is so easy, you just need to specify a `File` object! The photo will be upl
 @Suppress("unused")
 fun sendIcon(): Ability {
     return Ability
-            .builder()
-            .name("icon")
-            .info("send the icon")
-            .locality(ALL)
-            .privacy(PUBLIC)
-            .action { context -> sendPhotoFromUpload("src/main/resources/chatbot.jpg", context.chatId()) }
-            .build()
+        .builder()
+        .name("icon")
+        .info("send the icon")
+        .locality(ALL)
+        .privacy(PUBLIC)
+        .action { context -> sendPhotoFromUpload("src/main/resources/chatbot.jpg", context.chatId()) }
+        .build()
 }
 
 private fun sendPhotoFromUpload(filePath: String, chatId: Long?) {
@@ -580,40 +580,40 @@ In our example we want to provide buttons for the actions of our bot so we use t
 @Suppress("unused")
 fun sendKeyboard(): Ability {
     return Ability
-            .builder()
-            .name("keyboard")
-            .info("send a custom keyboard")
-            .locality(ALL)
-            .privacy(PUBLIC)
-            .action { context ->
-                val message = SendMessage()
-                message.setChatId(context.chatId())
-                message.text = "Enjoy this wonderful keyboard!"
+        .builder()
+        .name("keyboard")
+        .info("send a custom keyboard")
+        .locality(ALL)
+        .privacy(PUBLIC)
+        .action { context ->
+            val message = SendMessage()
+            message.setChatId(context.chatId())
+            message.text = "Enjoy this wonderful keyboard!"
 
-                val keyboardMarkup = ReplyKeyboardMarkup()
-                val keyboard = ArrayList<KeyboardRow>()
+            val keyboardMarkup = ReplyKeyboardMarkup()
+            val keyboard = ArrayList<KeyboardRow>()
 
-                // row 1
-                var row = KeyboardRow()
-                row.add("/hello")
-                row.add("/hi")
-                row.add("/count")
-                keyboard.add(row)
+            // row 1
+            var row = KeyboardRow()
+            row.add("/hello")
+            row.add("/hi")
+            row.add("/count")
+            keyboard.add(row)
 
-                // row 2
-                row = KeyboardRow()
-                row.add("/contacts")
-                row.add("/logo")
-                row.add("/icon")
-                keyboard.add(row)
+            // row 2
+            row = KeyboardRow()
+            row.add("/contacts")
+            row.add("/logo")
+            row.add("/icon")
+            keyboard.add(row)
 
-                // activate the keyboard
-                keyboardMarkup.keyboard = keyboard
-                message.replyMarkup = keyboardMarkup
+            // activate the keyboard
+            keyboardMarkup.keyboard = keyboard
+            message.replyMarkup = keyboardMarkup
 
-                silent.execute<Message, SendMessage>(message)
-            }
-            .build()
+            silent.execute<Message, SendMessage>(message)
+        }
+        .build()
 }
 ```
 
@@ -625,17 +625,17 @@ To send formatted messages, you can use Markdown syntax. As of today, Telegram s
 @Suppress("unused")
 fun format(): Ability {
     return Ability
-            .builder()
-            .name("format")
-            .info("formats the message")
-            .locality(ALL)
-            .privacy(PUBLIC)
-            .action { context ->
-                silent.sendMd("You can make text *bold* or _italic_.", context.chatId())
-                silent.sendMd("`This is code.`", context.chatId())
-                silent.sendMd("```\nThis\nis\nmulti\nline\ncode.\n```", context.chatId())
-            }
-            .build()
+        .builder()
+        .name("format")
+        .info("formats the message")
+        .locality(ALL)
+        .privacy(PUBLIC)
+        .action { context ->
+            silent.sendMd("You can make text *bold* or _italic_.", context.chatId())
+            silent.sendMd("`This is code.`", context.chatId())
+            silent.sendMd("```\nThis\nis\nmulti\nline\ncode.\n```", context.chatId())
+        }
+        .build()
 }
 ```
 
@@ -647,19 +647,19 @@ Commands can have arguments. Usually arguments are separated by whitespace. You 
 @Suppress("unused")
 fun add(): Ability {
     return Ability
-            .builder()
-            .name("add")
-            .info("adds to numbers")
-            .locality(ALL)
-            .privacy(PUBLIC)
-            .input(2)
-            .action { context ->
-                val a = Integer.parseInt(context.firstArg())
-                val b = Integer.parseInt(context.secondArg())
-                val sum = a + b
-                silent.send(String.format("The sum of %d and %d is %d", a, b, sum), context.chatId())
-            }
-            .build()
+        .builder()
+        .name("add")
+        .info("adds to numbers")
+        .locality(ALL)
+        .privacy(PUBLIC)
+        .input(2)
+        .action { context ->
+            val a = Integer.parseInt(context.firstArg())
+            val b = Integer.parseInt(context.secondArg())
+            val sum = a + b
+            silent.send(String.format("The sum of %d and %d is %d", a, b, sum), context.chatId())
+        }
+        .build()
 }
 ```
 
@@ -673,11 +673,11 @@ You can answer to non-command messages, too. That's what default abilities are f
 @Suppress("unused")
 fun sayNo(): Ability {
     return Ability.builder()
-            .name(AbilityBot.DEFAULT)
-            .privacy(PUBLIC)
-            .locality(ALL)
-            .action { context -> silent.send("Sorry, I have no answer for you today.", context.chatId()) }
-            .build()
+        .name(AbilityBot.DEFAULT)
+        .privacy(PUBLIC)
+        .locality(ALL)
+        .action { context -> silent.send("Sorry, I have no answer for you today.", context.chatId()) }
+        .build()
 }
 ```
 

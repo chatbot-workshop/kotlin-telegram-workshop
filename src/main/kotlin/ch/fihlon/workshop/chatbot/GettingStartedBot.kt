@@ -44,8 +44,8 @@ class GettingStartedBot : TelegramLongPollingBot() {
             val chatId = update.message.chatId
             val text = update.message.text
             val message = SendMessage()
-                    .setChatId(chatId!!)
-                    .setText(text)
+                .setChatId(chatId!!)
+                .setText(text)
             try {
                 execute<Message, SendMessage>(message)
             } catch (e: TelegramApiException) {

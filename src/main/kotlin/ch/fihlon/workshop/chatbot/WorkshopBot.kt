@@ -73,8 +73,8 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
 
     @Suppress("unused")
     fun replyToPhoto() = Reply.of(
-            Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)) },
-            Flag.PHOTO)
+        Consumer<Update> { update -> silent.send("Nice pic!", getChatId(update)) },
+        Flag.PHOTO)
 
     private val isMarcus: Predicate<Update>
         get() = Predicate { update -> update.message.from.firstName.equals("Marcus", ignoreCase = true) }
@@ -82,77 +82,77 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
     @Suppress("unused")
     fun sayHi(): Ability {
         return Ability
-                .builder()
-                .name("hi")
-                .info("says hi")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action { context ->
-                    val firstName = context.user().firstName()
-                    silent.send("Hi, $firstName", context.chatId())
-                }
-                .reply(
-                    Consumer<Update> { update -> silent.send("Wow, nice name!", update.message.chatId) },
-                    Flag.TEXT,
-                    Predicate<Update> { update -> update.message.text.startsWith("/hi") },
-                    isMarcus
-                )
-                .build()
+            .builder()
+            .name("hi")
+            .info("says hi")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context ->
+                val firstName = context.user().firstName()
+                silent.send("Hi, $firstName", context.chatId())
+            }
+            .reply(
+                Consumer<Update> { update -> silent.send("Wow, nice name!", update.message.chatId) },
+                Flag.TEXT,
+                Predicate<Update> { update -> update.message.text.startsWith("/hi") },
+                isMarcus
+            )
+            .build()
     }
 
     @Suppress("unused")
     fun counter(): Ability {
         return Ability.builder()
-                .name("count")
-                .info("increments a counter per user")
-                .privacy(PUBLIC)
-                .locality(ALL)
-                .action { context ->
-                    val counterMap = db.getMap<String, Int>("COUNTERS")
-                    val userId = context.user().id()
-                    val counter = counterMap.compute(userId.toString(), {_, c -> if (c == null) 1 else c + 1})
-                    val message = String.format("%s, your count is now %d!",
-                            context.user().shortName(), counter)
-                    silent.send(message, context.chatId())
-                }
-                .build()
+            .name("count")
+            .info("increments a counter per user")
+            .privacy(PUBLIC)
+            .locality(ALL)
+            .action { context ->
+                val counterMap = db.getMap<String, Int>("COUNTERS")
+                val userId = context.user().id()
+                val counter = counterMap.compute(userId.toString(), { _, c -> if (c == null) 1 else c + 1 })
+                val message = String.format("%s, your count is now %d!",
+                    context.user().shortName(), counter)
+                silent.send(message, context.chatId())
+            }
+            .build()
     }
 
     @Suppress("unused")
     fun contacts(): Ability {
         return Ability.builder()
-                .name("contacts")
-                .info("lists all users who contacted this bot")
-                .privacy(PUBLIC)
-                .locality(ALL)
-                .action { context ->
-                    val usersMap = db.getMap<String, EndUser>("USERS")
-                    val users = usersMap.values.joinToString(", ") { it.username() }
-                    val message = "The following users already contacted me: $users"
-                    silent.send(message, context.chatId())
-                }
-                .build()
+            .name("contacts")
+            .info("lists all users who contacted this bot")
+            .privacy(PUBLIC)
+            .locality(ALL)
+            .action { context ->
+                val usersMap = db.getMap<String, EndUser>("USERS")
+                val users = usersMap.values.joinToString(", ") { it.username() }
+                val message = "The following users already contacted me: $users"
+                silent.send(message, context.chatId())
+            }
+            .build()
     }
 
     @Suppress("unused")
     fun savePhoto(): Reply {
         return Reply.of(
-                Consumer<Update> { update ->
-                    val photos = update.message.photo
-                    val photoSize = photos.stream()
-                        .max(Comparator.comparingInt(PhotoSize::getFileSize))
-                        .orElse(null)
-                    if (photoSize != null) {
-                        val filePath = getFilePath(photoSize)
-                        val file = downloadPhoto(filePath)
-                        println("Temporary file: $file")
-                        silent.send("Yeah, I got it!", getChatId(update))
-                        sendPhotoFromFileId(photoSize.fileId, getChatId(update))
-                    } else {
-                        silent.send("Houston, we have a problem!", getChatId(update))
-                    }
-                },
-                Flag.PHOTO)
+            Consumer<Update> { update ->
+                val photos = update.message.photo
+                val photoSize = photos.stream()
+                    .max(Comparator.comparingInt(PhotoSize::getFileSize))
+                    .orElse(null)
+                if (photoSize != null) {
+                    val filePath = getFilePath(photoSize)
+                    val file = downloadPhoto(filePath)
+                    println("Temporary file: $file")
+                    silent.send("Yeah, I got it!", getChatId(update))
+                    sendPhotoFromFileId(photoSize.fileId, getChatId(update))
+                } else {
+                    silent.send("Houston, we have a problem!", getChatId(update))
+                }
+            },
+            Flag.PHOTO)
     }
 
     private fun getFilePath(photo: PhotoSize): String? {
@@ -184,13 +184,13 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
     @Suppress("unused")
     fun sendLogo(): Ability {
         return Ability
-                .builder()
-                .name("logo")
-                .info("send the logo")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action { context -> sendPhotoFromUrl("https://www.fihlon.ch/images/logo.png", context.chatId()) }
-                .build()
+            .builder()
+            .name("logo")
+            .info("send the logo")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context -> sendPhotoFromUrl("https://www.fihlon.ch/images/logo.png", context.chatId()) }
+            .build()
     }
 
     private fun sendPhotoFromUrl(url: String, chatId: Long?) {
@@ -218,13 +218,13 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
     @Suppress("unused")
     fun sendIcon(): Ability {
         return Ability
-                .builder()
-                .name("icon")
-                .info("send the icon")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action { context -> sendPhotoFromUpload("src/main/resources/chatbot.jpg", context.chatId()) }
-                .build()
+            .builder()
+            .name("icon")
+            .info("send the icon")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context -> sendPhotoFromUpload("src/main/resources/chatbot.jpg", context.chatId()) }
+            .build()
     }
 
     private fun sendPhotoFromUpload(filePath: String, chatId: Long?) {
@@ -241,84 +241,84 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
     @Suppress("unused")
     fun sendKeyboard(): Ability {
         return Ability
-                .builder()
-                .name("keyboard")
-                .info("send a custom keyboard")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action { context ->
-                    val message = SendMessage()
-                    message.setChatId(context.chatId())
-                    message.text = "Enjoy this wonderful keyboard!"
+            .builder()
+            .name("keyboard")
+            .info("send a custom keyboard")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context ->
+                val message = SendMessage()
+                message.setChatId(context.chatId())
+                message.text = "Enjoy this wonderful keyboard!"
 
-                    val keyboardMarkup = ReplyKeyboardMarkup()
-                    val keyboard = ArrayList<KeyboardRow>()
+                val keyboardMarkup = ReplyKeyboardMarkup()
+                val keyboard = ArrayList<KeyboardRow>()
 
-                    // row 1
-                    var row = KeyboardRow()
-                    row.add("/hello")
-                    row.add("/hi")
-                    row.add("/count")
-                    keyboard.add(row)
+                // row 1
+                var row = KeyboardRow()
+                row.add("/hello")
+                row.add("/hi")
+                row.add("/count")
+                keyboard.add(row)
 
-                    // row 2
-                    row = KeyboardRow()
-                    row.add("/contacts")
-                    row.add("/logo")
-                    row.add("/icon")
-                    keyboard.add(row)
+                // row 2
+                row = KeyboardRow()
+                row.add("/contacts")
+                row.add("/logo")
+                row.add("/icon")
+                keyboard.add(row)
 
-                    // activate the keyboard
-                    keyboardMarkup.keyboard = keyboard
-                    message.replyMarkup = keyboardMarkup
+                // activate the keyboard
+                keyboardMarkup.keyboard = keyboard
+                message.replyMarkup = keyboardMarkup
 
-                    silent.execute<Message, SendMessage>(message)
-                }
-                .build()
+                silent.execute<Message, SendMessage>(message)
+            }
+            .build()
     }
 
     @Suppress("unused")
     fun format(): Ability {
         return Ability
-                .builder()
-                .name("format")
-                .info("formats the message")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action { context ->
-                    silent.sendMd("You can make text *bold* or _italic_.", context.chatId())
-                    silent.sendMd("`This is code.`", context.chatId())
-                    silent.sendMd("```\nThis\nis\nmulti\nline\ncode.\n```", context.chatId())
-                }
-                .build()
+            .builder()
+            .name("format")
+            .info("formats the message")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .action { context ->
+                silent.sendMd("You can make text *bold* or _italic_.", context.chatId())
+                silent.sendMd("`This is code.`", context.chatId())
+                silent.sendMd("```\nThis\nis\nmulti\nline\ncode.\n```", context.chatId())
+            }
+            .build()
     }
 
     @Suppress("unused")
     fun add(): Ability {
         return Ability
-                .builder()
-                .name("add")
-                .info("adds to numbers")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .input(2)
-                .action { context ->
-                    val a = Integer.parseInt(context.firstArg())
-                    val b = Integer.parseInt(context.secondArg())
-                    val sum = a + b
-                    silent.send(String.format("The sum of %d and %d is %d", a, b, sum), context.chatId())
-                }
-                .build()
+            .builder()
+            .name("add")
+            .info("adds to numbers")
+            .locality(ALL)
+            .privacy(PUBLIC)
+            .input(2)
+            .action { context ->
+                val a = Integer.parseInt(context.firstArg())
+                val b = Integer.parseInt(context.secondArg())
+                val sum = a + b
+                silent.send(String.format("The sum of %d and %d is %d", a, b, sum), context.chatId())
+            }
+            .build()
     }
 
     @Suppress("unused")
     fun sayNo(): Ability {
         return Ability.builder()
-                .name(AbilityBot.DEFAULT)
-                .privacy(PUBLIC)
-                .locality(ALL)
-                .action { context -> silent.send("Sorry, I have no answer for you today.", context.chatId()) }
-                .build()
+            .name(AbilityBot.DEFAULT)
+            .privacy(PUBLIC)
+            .locality(ALL)
+            .action { context -> silent.send("Sorry, I have no answer for you today.", context.chatId()) }
+            .build()
     }
 
     @VisibleForTesting
@@ -330,5 +330,4 @@ class WorkshopBot(botToken: String, botUsername: String, db: DBContext) : Abilit
     fun setSilent(silent: SilentSender) {
         this.silent = silent
     }
-
 }

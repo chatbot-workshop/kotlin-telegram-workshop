@@ -78,5 +78,4 @@ class WorkshopBotTest {
     fun tearDown() {
         db!!.clear()
     }
-
 }
